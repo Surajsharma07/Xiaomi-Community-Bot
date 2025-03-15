@@ -1,11 +1,17 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-# List of admin user IDs (imported from config.py)
-from config import ADMIN_IDS
+import os
 
-# Channel ID for logging (imported from config.py)
-from config import LOG_CHANNEL_ID
+# List of admin user IDs (loaded from .env)
+ADMIN_IDS = os.getenv("ADMIN_IDS")
+if not ADMIN_IDS:
+    ADMIN_IDS = []
+else:
+    ADMIN_IDS = list(map(int, ADMIN_IDS.split(',')))
+
+# Channel ID for logging (loaded from .env)
+LOG_CHANNEL_ID = os.getenv("LOG_CHANNEL_ID")
 
 async def log_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """

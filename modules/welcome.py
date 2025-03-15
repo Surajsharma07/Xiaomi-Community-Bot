@@ -1,6 +1,12 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import ContextTypes, MessageHandler, filters
-from config import ADMIN_IDS, WELCOME_MESSAGE
+import os
+
+ADMIN_IDS = os.getenv("ADMIN_IDS")
+if not ADMIN_IDS:
+    ADMIN_IDS = []
+else:
+    ADMIN_IDS = list(map(int, ADMIN_IDS.split(',')))
 
 async def send_welcome_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 

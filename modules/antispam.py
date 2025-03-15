@@ -1,9 +1,13 @@
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
-import time
+import time, os
 
-# List of admin user IDs (imported from config.py)
-from config import ADMIN_IDS
+ADMIN_IDS = os.getenv("ADMIN_IDS")
+if not ADMIN_IDS:
+    ADMIN_IDS = []
+else:
+    ADMIN_IDS = list(map(int, ADMIN_IDS.split(',')))
+
 
 # A dictionary to keep track of recent messages for spam detection
 recent_messages = {}

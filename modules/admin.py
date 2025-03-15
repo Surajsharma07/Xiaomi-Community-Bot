@@ -3,12 +3,14 @@ from telegram.ext import ContextTypes, CommandHandler
 from telegram.error import BadRequest
 from datetime import timedelta, datetime, timezone
 from pymongo import MongoClient
-from config import ADMIN_IDS, DATABASE_URI
+import os
 
-# Initialize MongoDB client
-client = MongoClient(DATABASE_URI)
-db = client.communitybot
-banned_users_collection = db.banned_users
+ADMIN_IDS = os.getenv("ADMIN_IDS")
+if not ADMIN_IDS:
+    ADMIN_IDS = []
+else:
+    ADMIN_IDS = list(map(int, ADMIN_IDS.split(',')))
+
 
 async def get_target_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Helper function to get the target user from a reply or username."""
@@ -49,7 +51,6 @@ async def handle_user_action(update: Update, context: ContextTypes.DEFAULT_TYPE,
     try:
         if action == "ban":
             await context.bot.ban_chat_member(update.effective_chat.id, user.id)
-            banned_users_collection.insert_one({"user_id": user.id, "username": user.username})
             await update.message.reply_text(f"User {user.first_name} has been banned.")
         elif action == "unban":
             await context.bot.unban_chat_member(update.effective_chat.id, user.id)
@@ -78,10 +79,8 @@ async def handle_user_action(update: Update, context: ContextTypes.DEFAULT_TYPE,
                 if message.from_user.id == user.id:
                     await message.delete()
             await context.bot.ban_chat_member(update.effective_chat.id, user.id)
-            banned_users_collection.insert_one({"user_id": user.id, "username": user.username})
             await update.message.reply_text(f"User {user.first_name} has been dbanned.")
         elif action == "gban":
-            banned_users_collection.insert_one({"user_id": user.id, "username": user.username})
             for group in await context.bot.get_my_groups():
                 try:
                     await context.bot.ban_chat_member(group.id, user.id)
