@@ -22,6 +22,10 @@ async def detect_spam(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     chat_id = update.effective_chat.id
     current_time = time.time()  # Use the time module to get the current timestamp
 
+    # Skip anti-spam checks if the user is an admin
+    if user_id in ADMIN_IDS:
+        return
+
     # Initialize user message history if not present
     if chat_id not in recent_messages:
         recent_messages[chat_id] = {}
