@@ -1,5 +1,33 @@
 <?php
 // User Verification Form Handler
+require 'vendor/autoload.php';
+
+use Google\Client;
+use Google\Service\Sheets;
+
+function saveToGoogleSheet($data) {
+    $serviceAccountFile = 'xiaomi-mi-community-ee216fa709be.json';  // Path to your service account file
+    $spreadsheetId = '1vBff9gf2lEw2sJD8wWuNB98SZa8AqQqszvn6YCTqWqY';        // Google Sheets Spreadsheet ID
+    $sheetName = 'userData';                         // Name of the sheet (default: Sheet1)
+
+    // Create Google Client
+    $client = new Client();
+    $client->setAuthConfig($serviceAccountFile);
+    $client->addScope([Sheets::SPREADSHEETS]);
+
+    // Create Sheets Service
+    $service = new Sheets($client);
+
+    // Data to append (as rows)
+    $values = [array_values($data)];
+    $body = new Sheets\ValueRange(['values' => $values]);
+
+    // Append data to the sheet
+    $params = ['valueInputOption' => 'USER_ENTERED'];
+    $range = $sheetName . '!A1'; // Starting cell
+
+    $service->spreadsheets_values->append($spreadsheetId, $range, $body, $params);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Prepare data to send to Telegram bot
@@ -9,7 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? null;
     $email = $_POST['email'] ?? null;
     $telegram_username = $_POST['telegram_username'] ?? null;
-    $device_owned = $_POST['device_owned'] ?? null;
+    $mi_id = $_POST['mi_id'] ?? null;
+    $country = $_POST['country'] ?? null;
+    $dob = $_POST['dob'] ?? null;
     $reason_to_join = $_POST['reason_to_join'] ?? null;
     $terms_accepted = isset($_POST['terms_accepted']) ? filter_var($_POST['terms_accepted'], FILTER_VALIDATE_BOOLEAN) : false;
 
@@ -88,8 +118,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $unmute_response = curl_exec($ch);
         curl_close($ch);
-
         // Display success message
+
+        // Silent Google Sheets data save
+        // Collect form data
+    $formData = [
+        'User ID' => $user_id,
+        'Telegram Username' => $telegram_username,
+        'Email' => $email,
+        'Mi ID' => $mi_id,
+        'Country' => $country,
+        'DOB' => $dob,
+        'Reason to Join' => $reason_to_join,
+        'Timestamp' => date('Y-m-d H:i:s')
+    ];
+
+    saveToGoogleSheet($formData);
         $success_message = "You have been verified & unmuted! Please close the web app.";
     } else {
         // Handle missing user_id, group_id, message_id, or terms not accepted
@@ -244,7 +288,8 @@ if ($group_id) {
                 <input type="hidden" id="user_id" name="user_id" value="<?php echo htmlspecialchars($user_id); ?>" required>
                 <input type="hidden" id="group_id" name="group_id" value="<?php echo htmlspecialchars($group_id); ?>" required>
                 <input type="hidden" id="message_id" name="message_id" value="<?php echo htmlspecialchars($message_id); ?>" required> <!-- Include message_id -->
-
+                <input type="hidden" id="group_name" name="group_name" value="<?php echo htmlspecialchars($group_name); ?>" required>
+                
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" placeholder="Enter your name" value="<?php echo htmlspecialchars($name ?? ''); ?>" required>
 
@@ -254,39 +299,14 @@ if ($group_id) {
                 <label for="telegram_username">Telegram Username:</label>
                 <input type="text" id="telegram_username" name="telegram_username" value="@<?php echo htmlspecialchars($telegram_username); ?>" readonly required>
 
-                <label for="group_name">Group Name:</label>
-                <input type="text" id="group_name" name="group_name" value="<?php echo htmlspecialchars($group_name); ?>" readonly required>
+                <label for="mi_id">Mi ID:</label>
+                <input type="number" id="mi_id" name="mi_id" placeholder="Enter Mi community ID" required>
 
-                <label for="device_owned">Device Currently Own:</label>
-                <select id="device_owned" name="device_owned" required>
-                    <option value="">Select your device</option>
-                    <option value="Xiaomi 15 Series">Xiaomi 15 Series</option>
-                    <option value="Xiaomi 14">Xiaomi 14</option>
-                    <option value="Xiaomi 14 Ultra">Xiaomi 14 Ultra</option>
-                    <option value="Xiaomi 14 CIVI">Xiaomi 14 CIVI</option>
-                    <option value="Xiaomi 14 Civi Limited Edition">Xiaomi 14 Civi Limited Edition</option>
-                    <option value="Redmi Note 14 Pro+ 5G">Redmi Note 14 Pro+ 5G</option>
-                    <option value="Redmi Note 14 Pro 5G">Redmi Note 14 Pro 5G</option>
-                    <option value="Redmi Note 14 5G">Redmi Note 14 5G</option>
-                    <option value="Redmi A4 5G">Redmi A4 5G</option>
-                    <option value="Redmi 14C 5G">Redmi 14C 5G</option>
-                    <option value="Redmi A3X">Redmi A3X</option>
-                    <option value="Redmi 13 5G">Redmi 13 5G</option>
-                    <option value="Redmi Note 13 Pro+">Redmi Note 13 Pro+</option>
-                    <option value="Redmi 13C 5G">Redmi 13C 5G</option>
-                    <option value="Redmi A3">Redmi A3</option>
-                    <option value="Redmi Note 13 Pro">Redmi Note 13 Pro</option>
-                    <option value="Redmi Note 13 5G">Redmi Note 13 5G</option>
-                    <option value="Redmi 13C">Redmi 13C</option>
-                    <option value="Redmi 12 5G">Redmi 12 5G</option>
-                    <option value="Redmi 12">Redmi 12</option>
-                    <option value="Redmi A2+">Redmi A2+</option>
-                    <option value="Redmi A2">Redmi A2</option>
-                    <option value="Redmi 12C">Redmi 12C</option>
-                    <option value="Redmi Note 12">Redmi Note 12</option>
-                    <option value="Redmi Note 12 Pro 5G">Redmi Note 12 Pro 5G</option>
-                    <option value="Redmi Note 12 Pro+ 5G">Redmi Note 12 Pro+ 5G</option>
-                </select>
+                <label for="country">Country:</label>
+                <input type="text" id="country" name="country" required>
+
+                <label for="dob">DOB:</label>
+                <input type="date" id="dob" name="dob" required>
 
                 <label for="reason_to_join">Reason to Join the Group:</label>
                 <textarea id="reason_to_join" name="reason_to_join" rows="4" required></textarea>
