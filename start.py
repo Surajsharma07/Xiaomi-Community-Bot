@@ -32,7 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Create a button to open the web app for verification, including group_id and message_id in the URL
                 web_app_button = InlineKeyboardButton(
                     text="Verify Your Details",
-                    web_app={"url": f"https://app.vynix.in/verify.php?user_id={update.effective_user.id}&group_id={group_id}&message_id={message_id}"}
+                    web_app={"url": f"https://xiaomi-mi-community-ccb9aceza3fagrez.canadacentral-01.azurewebsites.net?user_id={update.effective_user.id}&group_id={group_id}&message_id={message_id}"}
                 )
                 keyboard = InlineKeyboardMarkup([[web_app_button]])
 
